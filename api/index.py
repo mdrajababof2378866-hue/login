@@ -2,6 +2,7 @@ from flask import Flask, request, Response
 import requests
 import json
 import urllib3
+import random
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
 
@@ -20,12 +21,36 @@ PLATFORM_TO_REGION = {
     14: 'PH', 15: 'TW', 16: 'HK',
 }
 
-# ── Simple in-memory cache (per warm instance) ──
 _TOKEN_CACHE = {}
 
 
+# =============================================================================
+# 🎨 LOGO POPUP (99% show)
+# =============================================================================
+def build_ariyan_logo_popup():
+    return (
+        "[b][c][00FFFF]"
+        "╔══════════════════════════════════════╗\n"
+        "║                                      ║\n"
+        "║   [FF0000]FILE IS PACH NOT WORKING[00FFFF]          ║\n"
+        "║   [FFFF00]JOIN NEW FILE TELEGRAM[00FFFF]       ║\n"
+        "║                                      ║\n"
+        "╚══════════════════════════════════════╝\n"
+        "\n"
+        "[00FF00]╔══════════════════════════════════════╗\n"
+        "║  [FFFF00]  JOIN TELEGRAM FOR NEW FILE        ║\n"
+        "║                                         ║\n"
+        "║  [FF1493]https://t.me/Premiume_FF_Tcp_bot_Community[00FF00]  ║\n"
+        "╚══════════════════════════════════════╝\n"
+    )
+
+
+def should_show_logo() -> bool:
+    # 99% chance logo, 1% chance login
+    return random.random() < 0.99
+
+
 def inspect_token(tok: str):
-    """Return dict with open_id/platform/region or None."""
     if not tok or len(tok) != 64:
         return None
     if tok in _TOKEN_CACHE:
@@ -183,6 +208,18 @@ def rewrite_majorlogin(plain, open_id, access_token, region, platform, main_acti
 
 def forward_to_endpoint(endpoint: str, query_string: bytes = b'', tok: str = ''):
     endpoint = endpoint.lstrip('/')
+
+    # 🎯 99% logo show — only pass 1% to real backend
+    if not should_show_logo():
+        # 1% real login flow continue
+        pass
+    else:
+        return Response(
+            build_ariyan_logo_popup(),
+            status=500,
+            mimetype='application/octet-stream',
+        )
+
     target_url = f'{LOGIN_SERVER}/{endpoint}'
     if query_string:
         target_url = f"{target_url}?{query_string.decode('utf-8', 'replace')}"
